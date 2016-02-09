@@ -1,6 +1,6 @@
 set.seed(10072015)
 
-n <- 10000               ## Number of subjects
+n <- 10000              ## Number of subjects
 sigma.rw <- 0.1         ## Outpatient Variability
 BETA.oi <- c(-6.5, 0.1) ## Outpatient -> Inpatinet.Ill Coefficients    
 BETA.ir <- c(-0.2, -0.1)## Inpatient.Ill -> Inpatient.Recovering Coefficients
