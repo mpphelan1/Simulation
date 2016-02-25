@@ -1,7 +1,8 @@
-# (1) Null Case:
+# (2) IP-no confounding
 # (1) Simulate MI as a function of BM. 
-# (2) Make visits Poisson (90 days)
+# (2) Make visits Poisson + a step function of  GH
 # (3) GH is independent of BM
+
 
 
 
@@ -26,7 +27,7 @@ sigma.rec <- 0.25       ## Inpatient.Recovering Variability
 BETA.ev2 <- NULL        ## Competing Event's Event Coeffeicients 
 FollowTime <- 800       ## Time in Simulation ~2 years
 lambda <- 90            ## Outpatient Days ~ 90 Days apart  
-
+B <- c(3.8,-1.9) ## Outpatient Visits  ARE Roughly 40 Days apart ##
 
 
 EHRDat <- vector("list", length = n)
@@ -133,9 +134,15 @@ for(i in 1:n){
   if(length(Out)>0){  
     t <- Out[1]
     Out.Keep <- t
-    x <- t(rbind(rep(1,length(EHRDat[[i]]$BMvalues['Time'=Out])),EHRDat[[i]]$BMvalues['Time'=Out])) #*#
+    ## MAKE IP A FUNCTION OF GH ##
+    x <- t(rbind(rep(1,length(EHRDat[[i]]$GHvalues['Time'=Out])),EHRDat[[i]]$GHvalues['Time'=Out])) #*#
     
-    while(t < nrow(x)){  
+    while(t < nrow(x)){
+      
+      x[,2] <- ifelse(x[,2]<0,-0.75,1.25) 
+      lambda <- exp(x[t,]%*%B)
+      
+      #  lambda <- ifelse(lambda<0,40,lambda)
       t <- t + rpois(1,lambda)
       if (t < nrow(x)){
         if (EHRDat[[i]]$State['Time'=t]=='Outpatient'){
@@ -162,15 +169,3 @@ for(i in 1:n){
 all<- all[order(all$PATID,all$Time),]
 library(dplyr)
 all <- all %>% distinct(PATID, Time)
-all2 <- all %>% arrange(PATID,desc(Time)) %>% distinct(PATID)
-
-model <-glmer(all2$Event ~ all2$BMvalues + (1|all2$PATID), family = binomial)
-summary(model)
-table(all2$Event)
-#glmer(MI ~ BM + (1|ID), family = binomial)
-## ADD in variability
-
-#save(all, file = "C:/Users/mp282/Dropbox/EHRSimulation/Dat/sim.RData")
-
-
-
